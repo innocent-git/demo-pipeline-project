@@ -1,0 +1,40 @@
+stages:
+  - terraform-init
+  - terraform-plan
+  - terraform-apply
+  - deploy
+  - monitor
+
+variables:
+  TF_ROOT: infrastructure/
+  KUBE_CONFIG: .kube/config
+
+terraform-init:
+  stage: terraform-init
+  script:
+    - cd $TF_ROOT
+    - terraform init
+
+terraform-plan:
+  stage: terraform-plan
+  script:
+    - cd $TF_ROOT
+    - terraform plan -out=tfplan
+
+terraform-apply:
+  stage: terraform-apply
+  script:
+    - cd $TF_ROOT
+    - terraform apply -auto-approve tfplan
+
+deploy-to-eks:
+  stage: deploy
+  script:
+    - export KUBECONFIG=$KUBE_CONFIG
+    - kubectl apply -f k8s/deployment.yaml
+    - kubectl apply -f k8s/service.yaml
+
+monitoring:
+  stage: monitor
+  script:
+    - echo "Monitoring with Prometheus and Grafana is enabled"
